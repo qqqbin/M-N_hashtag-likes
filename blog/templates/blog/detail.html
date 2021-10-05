@@ -1,0 +1,62 @@
+{% extends 'blog/base.html' %}
+{% block content %}
+    <div class="container px-4 px-lg-5">
+        
+        <h2 class="post-title">제목 : {{post.title}} </h2>
+        <hr class="divider">
+        
+        <p>작성 일지 및 시간 : {{ post.pub_date }}</p>
+        <p>작성자 : {{post.writer}}</p>
+        <p>내용 : {{post.body}}</p>
+
+        {% if post.image %} 
+            <img src = "{{ post.image.url }}" width = "250" height="250" alt="Card iamge cap">
+        {% endif %} 
+        <br>
+
+        {% for hashtag in post.hashtags.all %} 
+            <span>{{ hashtag.name }}</span>
+        {% endfor %}
+        <br><br>
+
+        <a href = "{% url 'edit' post.id %}">수정하기</a>
+        <a href = "{% url 'delete' post.id %}">삭제하기</a>
+
+        <br> <br> <br>
+        {% for comment in post.comments.all %} 
+            <p>{{ comment.text }}</p>
+        {% endfor %} 
+        <form method="POST" action="{% url 'detail' post.id %}">
+            {% csrf_token %} 
+            <p>{{ form.as_p }}</p>
+            <input type="submit" value="submit">
+        </form>  
+    </div>
+
+    <div>
+        <input type="button" class="btn btn-info btn-sm like" name="{{ post.id }}" value="Like" style="margin-top: 7px">
+        <p id="count-{{ post.id }}" style="font:blod 1em; margin-top: 3px">좋아요 &nbsp; {{ post.likes_user.all.count }}</p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script type = "text/javascript">
+        $(".like").click(funtion () {
+            var pk = $(this).attr('name')
+            $.ajax({
+                type="POST",
+                url: "{% url 'post_like' %}",
+                data : { 'pk': pk, 'csrfmiddlewaretoken':'{{ csrf_token }}' },
+                dataType:"json",
+                succes: function (response) {
+                    alert(response.message);
+                    $("#count-" + pk).html("좋아요&nbsp;" + response.likes_count + "개");
+                },
+                error : function (request, status, error) {
+                    alert("로그인이 필요합니다.")
+                    window.location.replace("#")
+                },
+            });
+        })
+    </script>
+
+{% endblock %}
